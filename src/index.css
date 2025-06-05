@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -96,6 +90,24 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-rose-50 text-foreground font-poppins;
+  }
+}
+
+@layer components {
+  .rose-gradient {
+    @apply bg-gradient-to-br from-rose-100 to-rose-200;
+  }
+  
+  .rose-card {
+    @apply bg-white/80 backdrop-blur-sm border border-rose-200 rounded-xl shadow-lg;
+  }
+  
+  .rose-button {
+    @apply bg-rose-500 hover:bg-rose-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .rose-input {
+    @apply bg-white/50 border border-rose-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent;
   }
 }
