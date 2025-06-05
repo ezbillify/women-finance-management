@@ -3,8 +3,17 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Transaction } from '@/data/mockData';
 import { Edit, Trash2 } from 'lucide-react';
+import { formatCurrency } from '@/utils/currency';
+
+interface Transaction {
+  id: string;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  description: string;
+  date: string;
+}
 
 interface ExpenseTableProps {
   transactions: Transaction[];
@@ -26,6 +35,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
               <TableHead className="text-rose-600">Date</TableHead>
               <TableHead className="text-rose-600">Description</TableHead>
               <TableHead className="text-rose-600">Category</TableHead>
+              <TableHead className="text-rose-600">Type</TableHead>
               <TableHead className="text-rose-600 text-right">Amount</TableHead>
               <TableHead className="text-rose-600 text-right">Actions</TableHead>
             </TableRow>
@@ -33,8 +43,8 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6 text-rose-500">
-                  No transactions found
+                <TableCell colSpan={6} className="text-center py-6 text-rose-500">
+                  No transactions found. Add your first transaction to get started!
                 </TableCell>
               </TableRow>
             ) : (
@@ -49,12 +59,16 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
                   <TableCell className="text-rose-600">
                     {transaction.category}
                   </TableCell>
+                  <TableCell className="text-rose-600 capitalize">
+                    {transaction.type}
+                  </TableCell>
                   <TableCell 
                     className={`text-right font-medium ${
                       transaction.type === 'expense' ? 'text-rose-700' : 'text-green-600'
                     }`}
                   >
-                    {transaction.type === 'expense' ? '-' : '+'}${transaction.amount}
+                    {transaction.type === 'expense' ? '-' : '+'}
+                    {formatCurrency(transaction.amount)}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">

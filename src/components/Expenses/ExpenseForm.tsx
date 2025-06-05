@@ -5,12 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Transaction } from '@/data/mockData';
+
+interface Transaction {
+  id?: string;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  description: string;
+  date: string;
+}
 
 interface ExpenseFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (transaction: Partial<Transaction>) => void;
+  onSubmit: (transaction: Transaction) => void;
   editingTransaction: Transaction | null;
 }
 
@@ -20,7 +28,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   onSubmit,
   editingTransaction,
 }) => {
-  const [formData, setFormData] = useState<Partial<Transaction>>({
+  const [formData, setFormData] = useState<Transaction>({
     date: new Date().toISOString().split('T')[0],
     amount: 0,
     description: '',
@@ -41,14 +49,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
   useEffect(() => {
     if (editingTransaction) {
-      setFormData({
-        id: editingTransaction.id,
-        date: editingTransaction.date,
-        amount: editingTransaction.amount,
-        description: editingTransaction.description,
-        category: editingTransaction.category,
-        type: editingTransaction.type,
-      });
+      setFormData(editingTransaction);
     } else {
       setFormData({
         date: new Date().toISOString().split('T')[0],
@@ -113,7 +114,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-rose-700">Amount ($)</Label>
+            <Label htmlFor="amount" className="text-rose-700">Amount (₹)</Label>
             <Input
               id="amount"
               type="number"

@@ -9,7 +9,162 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      ai_suggestions: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          suggestion_text: string
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          suggestion_text: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          suggestion_text?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      savings: {
+        Row: {
+          created_at: string | null
+          deadline: string | null
+          goal_name: string
+          id: string
+          saved_amount: number | null
+          target_amount: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deadline?: string | null
+          goal_name: string
+          id?: string
+          saved_amount?: number | null
+          target_amount: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deadline?: string | null
+          goal_name?: string
+          id?: string
+          saved_amount?: number | null
+          target_amount?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          date: string
+          description: string | null
+          id: string
+          type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          auth_user_id: string | null
+          category: string | null
+          created_at: string | null
+          email: string
+          id: string
+          income_amount: number | null
+          income_frequency: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          auth_user_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          income_amount?: number | null
+          income_frequency?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          auth_user_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          income_amount?: number | null
+          income_frequency?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

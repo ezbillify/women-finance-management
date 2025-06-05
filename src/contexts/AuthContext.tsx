@@ -1,19 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  category: 'student' | 'working' | 'non-working' | 'entrepreneur';
-}
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string, category: User['category']) => Promise<boolean>;
-  logout: () => void;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  register: (name: string, email: string, password: string, category: 'student' | 'working' | 'non-working' | 'entrepreneur') => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,64 +25,83 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem('budgetbuddy_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication - in real app, this would call your Django backend
-    if (email && password) {
-      const mockUser: User = {
-        id: '1',
-        name: 'Sarah Johnson',
-        email: email,
-        category: 'working'
-      };
-      setUser(mockUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('budgetbuddy_user', JSON.stringify(mockUser));
-      return true;
-    }
-    return false;
-  };
-
-  const register = async (name: string, email: string, password: string, category: User['category']): Promise<boolean> => {
-    // Mock registration - in real app, this would call your Django backend
-    if (name && email && password) {
-      const newUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
+  const login = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        category
-      };
-      setUser(newUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('budgetbuddy_user', JSON.stringify(newUser));
-      return true;
+        password,
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
     }
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('budgetbuddy_user');
+  const register = async (name: string, email: string, password: string, category: 'student' | 'working' | 'non-working' | 'entrepreneur') => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            category
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
     <AuthContext.Provider value={{
       user,
+      session,
       login,
       register,
       logout,
-      isAuthenticated
+      isAuthenticated: !!user,
+      loading
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,23 +1,40 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import ExpenseTable from '@/components/Expenses/ExpenseTable';
 import ExpenseFilters from '@/components/Expenses/ExpenseFilters';
 import ExpenseForm from '@/components/Expenses/ExpenseForm';
 import { useToast } from '@/hooks/use-toast';
-import { filterTransactions, Transaction, mockTransactions } from '@/data/mockData';
+import { useUserData } from '@/hooks/useUserData';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const Expenses = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>(mockTransactions);
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { 
+    transactions, 
+    loading, 
+    addTransaction, 
+    updateTransaction, 
+    deleteTransaction 
+  } = useUserData();
+  
+  const [filteredTransactions, setFilteredTransactions] = useState(transactions);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const applyFilters = () => {
     let result = transactions;
@@ -48,56 +65,72 @@ const Expenses = () => {
     applyFilters();
   }, [transactions, selectedMonth, selectedCategory, searchTerm]);
 
-  const handleAddOrUpdateTransaction = (data: Partial<Transaction>) => {
-    if (data.id) {
-      // Update existing transaction
-      const updatedTransactions = transactions.map(t => 
-        t.id === data.id ? { ...t, ...data } as Transaction : t
-      );
-      setTransactions(updatedTransactions);
+  const handleAddOrUpdateTransaction = async (data: any) => {
+    try {
+      if (data.id) {
+        // Update existing transaction
+        await updateTransaction(data.id, data);
+        toast({
+          title: "Transaction updated",
+          description: "Your transaction has been successfully updated.",
+        });
+      } else {
+        // Add new transaction
+        await addTransaction(data);
+        toast({
+          title: "Transaction added",
+          description: "Your new transaction has been successfully recorded.",
+        });
+      }
+      setIsFormOpen(false);
+      setEditingTransaction(null);
+    } catch (error) {
       toast({
-        title: "Transaction updated",
-        description: "Your transaction has been successfully updated.",
-      });
-    } else {
-      // Add new transaction
-      const newTransaction: Transaction = {
-        id: `trans-${Date.now()}`,
-        date: data.date || new Date().toISOString().split('T')[0],
-        amount: data.amount || 0,
-        category: data.category || '',
-        description: data.description || '',
-        type: data.type as 'expense' | 'income' || 'expense'
-      };
-      setTransactions([newTransaction, ...transactions]);
-      toast({
-        title: "Transaction added",
-        description: "Your new transaction has been successfully recorded.",
+        title: "Error",
+        description: "Failed to save transaction. Please try again.",
+        variant: "destructive",
       });
     }
-    setIsFormOpen(false);
-    setEditingTransaction(null);
   };
 
   const handleDeleteTransaction = (id: string) => {
     setDeletingId(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deletingId) {
-      setTransactions(transactions.filter(t => t.id !== deletingId));
-      toast({
-        title: "Transaction deleted",
-        description: "The transaction has been permanently removed.",
-      });
+      try {
+        await deleteTransaction(deletingId);
+        toast({
+          title: "Transaction deleted",
+          description: "The transaction has been permanently removed.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete transaction. Please try again.",
+          variant: "destructive",
+        });
+      }
       setDeletingId(null);
     }
   };
 
-  const handleEdit = (transaction: Transaction) => {
+  const handleEdit = (transaction: any) => {
     setEditingTransaction(transaction);
     setIsFormOpen(true);
   };
+
+  if (authLoading || loading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 to-rose-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mx-auto mb-4"></div>
+          <p className="text-rose-600 font-comfortaa">Loading your expenses...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Layout>

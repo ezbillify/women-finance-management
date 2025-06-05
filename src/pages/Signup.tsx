@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,15 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [category, setCategory] = useState<'student' | 'working' | 'non-working' | 'entrepreneur' | ''>('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,19 +39,19 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      const success = await register(name, email, password, category);
-      if (success) {
+      const { error } = await register(name, email, password, category);
+      if (error) {
+        toast({
+          title: "Registration failed",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
         toast({
           title: "Welcome to BudgetBuddy!",
           description: "Your account has been created successfully.",
         });
         navigate('/dashboard');
-      } else {
-        toast({
-          title: "Registration failed",
-          description: "Please check your information and try again.",
-          variant: "destructive",
-        });
       }
     } catch (error) {
       toast({

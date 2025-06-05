@@ -14,10 +14,12 @@ const QuickEntry: React.FC<QuickEntryProps> = ({ onAddTransaction }) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [type, setType] = useState<'income' | 'expense'>('expense');
 
   const categories = [
     'Groceries', 'Dining', 'Shopping', 'Transportation', 
-    'Utilities', 'Healthcare', 'Entertainment', 'Education'
+    'Utilities', 'Healthcare', 'Entertainment', 'Education',
+    'Salary', 'Freelance', 'Investments', 'Gifts'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -25,12 +27,11 @@ const QuickEntry: React.FC<QuickEntryProps> = ({ onAddTransaction }) => {
     if (!amount || !category || !description) return;
 
     const newTransaction = {
-      id: `trans-${Date.now()}`,
       date: new Date().toISOString().split('T')[0],
       amount: parseFloat(amount),
       category,
       description,
-      type: 'expense' as const,
+      type,
     };
 
     onAddTransaction(newTransaction);
@@ -42,12 +43,25 @@ const QuickEntry: React.FC<QuickEntryProps> = ({ onAddTransaction }) => {
   return (
     <Card className="rose-card">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-comfortaa text-rose-600">Quick Expense Entry</CardTitle>
+        <CardTitle className="text-xl font-comfortaa text-rose-600">Quick Entry</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-rose-700">Amount ($)</Label>
+            <Label htmlFor="type" className="text-rose-700">Type</Label>
+            <Select value={type} onValueChange={(value: 'income' | 'expense') => setType(value)}>
+              <SelectTrigger className="rose-input">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="expense">Expense</SelectItem>
+                <SelectItem value="income">Income</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="amount" className="text-rose-700">Amount (₹)</Label>
             <Input
               id="amount"
               type="number"
@@ -85,12 +99,12 @@ const QuickEntry: React.FC<QuickEntryProps> = ({ onAddTransaction }) => {
               onChange={(e) => setDescription(e.target.value)}
               required
               className="rose-input"
-              placeholder="What was this expense for?"
+              placeholder="What was this for?"
             />
           </div>
           
           <Button type="submit" className="w-full rose-button">
-            Add Expense
+            Add {type === 'expense' ? 'Expense' : 'Income'}
           </Button>
         </form>
       </CardContent>
