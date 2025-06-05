@@ -9,6 +9,7 @@ import {
   ChartData
 } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
+import { formatCurrency } from '@/utils/currency';
 
 ChartJS.register(
   ArcElement,
@@ -54,7 +55,7 @@ const ExpenseCategoryBreakdown: React.FC<ExpenseCategoryBreakdownProps> = ({ cat
             const value = context.raw || 0;
             const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
             const percentage = Math.round((value / total) * 100);
-            return `${label}: $${value} (${percentage}%)`;
+            return `${label}: ${formatCurrency(value)} (${percentage}%)`;
           }
         }
       }
@@ -76,7 +77,7 @@ const ExpenseCategoryBreakdown: React.FC<ExpenseCategoryBreakdownProps> = ({ cat
           <Pie data={pieChartData} options={pieOptions} />
         </div>
         <div className="mt-4">
-          <p className="text-center text-rose-600">Total Expenses: ${calculateTotal()}</p>
+          <p className="text-center text-rose-600">Total Expenses: {formatCurrency(calculateTotal())}</p>
         </div>
       </CardContent>
     </Card>

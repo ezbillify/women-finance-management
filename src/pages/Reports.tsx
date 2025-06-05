@@ -6,16 +6,47 @@ import MonthlySpendingChart from '@/components/Reports/MonthlySpendingChart';
 import ExpenseCategoryBreakdown from '@/components/Reports/ExpenseCategoryBreakdown';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { mockGoals, getCategoryExpenses, mockTransactions } from '@/data/mockData';
+import { useUserData } from '@/hooks/useUserData';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { format, subMonths } from 'date-fns';
+import { formatCurrency } from '@/utils/currency';
 
 const Reports = () => {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { 
+    transactions, 
+    savingsGoals, 
+    loading, 
+    getTotals, 
+    getCategoryExpenses 
+  } = useUserData();
   const [timeframe, setTimeframe] = useState('6months');
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
+  if (authLoading || loading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 to-rose-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mx-auto mb-4"></div>
+          <p className="text-rose-600 font-comfortaa">Loading your reports...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Prepare data for the expense category breakdown chart
   const categoryExpenses = getCategoryExpenses();
+  const { totalIncome, totalExpenses } = getTotals();
   
-  // Generate mock data for monthly spending chart
+  // Generate monthly data for spending chart
   const generateMonthlyData = (months: number) => {
     const data = [];
     const today = new Date();
@@ -26,7 +57,7 @@ const Reports = () => {
       const monthStart = format(date, 'yyyy-MM');
       
       // Filter transactions for this month
-      const monthlyTransactions = mockTransactions.filter(
+      const monthlyTransactions = transactions.filter(
         t => t.date.startsWith(monthStart) && t.type === 'expense'
       );
       
@@ -73,7 +104,7 @@ const Reports = () => {
         <MonthlySpendingChart data={monthlyData} />
         
         <div className="lg:col-span-2">
-          <SavingsGoalChart goals={mockGoals} />
+          <SavingsGoalChart goals={savingsGoals} />
         </div>
         
         <Card className="rose-card lg:col-span-2">
@@ -83,19 +114,22 @@ const Reports = () => {
               <div className="bg-white/50 p-4 rounded-lg border border-rose-100">
                 <p className="text-lg font-medium text-rose-700">Avg. Monthly Spending</p>
                 <p className="text-2xl font-bold text-rose-600">
-                  ${Math.round(monthlyData.reduce((sum, item) => sum + item.spending, 0) / monthlyData.length)}
+                  {formatCurrency(monthlyData.reduce((sum, item) => sum + item.spending, 0) / (monthlyData.length || 1))}
                 </p>
               </div>
               <div className="bg-white/50 p-4 rounded-lg border border-rose-100">
                 <p className="text-lg font-medium text-rose-700">Total Savings Progress</p>
                 <p className="text-2xl font-bold text-rose-600">
-                  ${mockGoals.reduce((sum, goal) => sum + goal.currentAmount, 0)}
+                  {formatCurrency(savingsGoals.reduce((sum, goal) => sum + goal.saved_amount, 0))}
                 </p>
               </div>
               <div className="bg-white/50 p-4 rounded-lg border border-rose-100">
                 <p className="text-lg font-medium text-rose-700">Top Expense Category</p>
                 <p className="text-2xl font-bold text-rose-600">
-                  {categoryExpenses.sort((a, b) => b.amount - a.amount)[0]?.category}
+                  {categoryExpenses.length > 0 
+                    ? categoryExpenses.sort((a, b) => b.amount - a.amount)[0]?.category
+                    : 'No expenses yet'
+                  }
                 </p>
               </div>
             </div>

@@ -6,64 +6,111 @@ import GoalForm from '@/components/Goals/GoalForm';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Goal, mockGoals } from '@/data/mockData';
+import { useUserData } from '@/hooks/useUserData';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const Goals = () => {
-  const [goals, setGoals] = useState<Goal[]>(mockGoals);
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { 
+    savingsGoals, 
+    loading, 
+    addSavingsGoal, 
+    updateSavingsGoal, 
+    deleteSavingsGoal 
+  } = useUserData();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [editingGoal, setEditingGoal] = useState(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleAddOrUpdateGoal = (data: Partial<Goal>) => {
-    if (data.id) {
-      // Update existing goal
-      const updatedGoals = goals.map(g => 
-        g.id === data.id ? { ...g, ...data } as Goal : g
-      );
-      setGoals(updatedGoals);
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
+  if (authLoading || loading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 to-rose-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mx-auto mb-4"></div>
+          <p className="text-rose-600 font-comfortaa">Loading your goals...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleAddOrUpdateGoal = async (data: any) => {
+    try {
+      if (data.id) {
+        // Update existing goal
+        await updateSavingsGoal(data.id, data);
+        toast({
+          title: "Goal updated",
+          description: "Your savings goal has been updated successfully.",
+        });
+      } else {
+        // Add new goal
+        await addSavingsGoal({
+          goal_name: data.name,
+          target_amount: data.targetAmount,
+          saved_amount: data.currentAmount || 0,
+          deadline: data.deadline,
+        });
+        toast({
+          title: "Goal created",
+          description: "Your new savings goal has been created successfully.",
+        });
+      }
+      setIsFormOpen(false);
+      setEditingGoal(null);
+    } catch (error) {
       toast({
-        title: "Goal updated",
-        description: "Your savings goal has been updated successfully.",
-      });
-    } else {
-      // Add new goal
-      const newGoal: Goal = {
-        id: `goal-${Date.now()}`,
-        name: data.name || '',
-        targetAmount: data.targetAmount || 0,
-        currentAmount: data.currentAmount || 0,
-        deadline: data.deadline || new Date().toISOString(),
-        category: data.category || '',
-      };
-      setGoals([...goals, newGoal]);
-      toast({
-        title: "Goal created",
-        description: "Your new savings goal has been created successfully.",
+        title: "Error",
+        description: "Failed to save goal. Please try again.",
+        variant: "destructive",
       });
     }
-    setIsFormOpen(false);
-    setEditingGoal(null);
   };
 
   const handleDeleteGoal = (id: string) => {
     setDeletingId(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deletingId) {
-      setGoals(goals.filter(g => g.id !== deletingId));
-      toast({
-        title: "Goal deleted",
-        description: "The savings goal has been removed.",
-      });
+      try {
+        await deleteSavingsGoal(deletingId);
+        toast({
+          title: "Goal deleted",
+          description: "The savings goal has been removed.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete goal. Please try again.",
+          variant: "destructive",
+        });
+      }
       setDeletingId(null);
     }
   };
 
-  const handleEdit = (goal: Goal) => {
-    setEditingGoal(goal);
+  const handleEdit = (goal: any) => {
+    const editData = {
+      id: goal.id,
+      name: goal.goal_name,
+      targetAmount: goal.target_amount,
+      currentAmount: goal.saved_amount,
+      deadline: goal.deadline,
+      category: goal.category || 'Savings',
+    };
+    setEditingGoal(editData);
     setIsFormOpen(true);
   };
 
@@ -84,7 +131,7 @@ const Goals = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {goals.length === 0 ? (
+        {savingsGoals.length === 0 ? (
           <div className="col-span-3 text-center py-12">
             <p className="text-lg text-rose-500 mb-4">
               You don't have any savings goals yet.
@@ -100,10 +147,17 @@ const Goals = () => {
             </Button>
           </div>
         ) : (
-          goals.map((goal) => (
+          savingsGoals.map((goal) => (
             <GoalCard
               key={goal.id}
-              goal={goal}
+              goal={{
+                id: goal.id,
+                name: goal.goal_name,
+                targetAmount: goal.target_amount,
+                currentAmount: goal.saved_amount,
+                deadline: goal.deadline || new Date().toISOString(),
+                category: 'Savings'
+              }}
               onEdit={handleEdit}
               onDelete={handleDeleteGoal}
             />

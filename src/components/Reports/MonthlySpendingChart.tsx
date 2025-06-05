@@ -13,6 +13,7 @@ import {
   Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { formatCurrency } from '@/utils/currency';
 
 ChartJS.register(
   CategoryScale,
@@ -61,7 +62,7 @@ const MonthlySpendingChart: React.FC<MonthlySpendingChartProps> = ({ data }) => 
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => `Spending: $${context.parsed.y}`,
+          label: (context: any) => `Spending: ${formatCurrency(context.parsed.y)}`,
         }
       }
     },
@@ -73,7 +74,7 @@ const MonthlySpendingChart: React.FC<MonthlySpendingChartProps> = ({ data }) => 
           color: 'rgba(0, 0, 0, 0.05)',
         },
         ticks: {
-          callback: (value: any) => `$${value}`
+          callback: (value: any) => formatCurrency(value)
         }
       },
       x: {
