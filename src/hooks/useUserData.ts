@@ -63,7 +63,18 @@ export const useUserData = () => {
       return;
     }
 
-    setUserProfile(data);
+    // Type cast with proper validation
+    const profile: UserProfile = {
+      id: data.id,
+      auth_user_id: data.auth_user_id,
+      name: data.name,
+      email: data.email,
+      category: data.category as 'student' | 'working' | 'non-working' | 'entrepreneur',
+      income_frequency: data.income_frequency as 'monthly' | 'weekly' | 'yearly',
+      income_amount: data.income_amount || 0,
+    };
+
+    setUserProfile(profile);
   };
 
   const fetchTransactions = async () => {
@@ -80,7 +91,18 @@ export const useUserData = () => {
       return;
     }
 
-    setTransactions(data || []);
+    // Type cast transactions properly
+    const typedTransactions: Transaction[] = (data || []).map(t => ({
+      id: t.id,
+      user_id: t.user_id,
+      amount: t.amount,
+      type: t.type as 'income' | 'expense',
+      category: t.category,
+      description: t.description || '',
+      date: t.date,
+    }));
+
+    setTransactions(typedTransactions);
   };
 
   const fetchSavingsGoals = async () => {
@@ -153,8 +175,19 @@ export const useUserData = () => {
       return;
     }
 
-    setTransactions(prev => [data, ...prev]);
-    return data;
+    // Type cast the returned data
+    const newTransaction: Transaction = {
+      id: data.id,
+      user_id: data.user_id,
+      amount: data.amount,
+      type: data.type as 'income' | 'expense',
+      category: data.category,
+      description: data.description || '',
+      date: data.date,
+    };
+
+    setTransactions(prev => [newTransaction, ...prev]);
+    return newTransaction;
   };
 
   const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
@@ -170,8 +203,19 @@ export const useUserData = () => {
       return;
     }
 
-    setTransactions(prev => prev.map(t => t.id === id ? data : t));
-    return data;
+    // Type cast the returned data
+    const updatedTransaction: Transaction = {
+      id: data.id,
+      user_id: data.user_id,
+      amount: data.amount,
+      type: data.type as 'income' | 'expense',
+      category: data.category,
+      description: data.description || '',
+      date: data.date,
+    };
+
+    setTransactions(prev => prev.map(t => t.id === id ? updatedTransaction : t));
+    return updatedTransaction;
   };
 
   const deleteTransaction = async (id: string) => {

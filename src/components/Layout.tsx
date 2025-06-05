@@ -14,6 +14,7 @@ import {
   X
 } from 'lucide-react';
 import { useState } from 'react';
+import { useUserData } from '@/hooks/useUserData';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
+  const { userProfile } = useUserData();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -85,8 +87,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* User Info */}
           <div className="px-6 py-4 bg-rose-50 mx-4 rounded-lg mb-6">
-            <p className="font-medium text-rose-700">{user?.name}</p>
-            <p className="text-sm text-rose-500 capitalize">{user?.category}</p>
+            <p className="font-medium text-rose-700">{userProfile?.name || 'User'}</p>
+            <p className="text-sm text-rose-500 capitalize">{userProfile?.category || 'working'}</p>
           </div>
 
           {/* Navigation */}

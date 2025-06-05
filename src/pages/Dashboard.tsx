@@ -91,6 +91,16 @@ const Dashboard = () => {
 
   const monthlyData = getMonthlyData();
 
+  // Convert AI suggestions to the format expected by AiInsightsPreview
+  const convertedInsights = aiSuggestions.map(suggestion => ({
+    id: suggestion.id,
+    title: suggestion.category || 'Financial Insight',
+    description: suggestion.suggestion_text,
+    type: 'saving' as const,
+    priority: 'medium' as const,
+    potentialSavings: undefined
+  }));
+
   return (
     <Layout>
       <h1 className="text-3xl font-comfortaa font-bold text-rose-600 mb-6">Dashboard</h1>
@@ -113,7 +123,7 @@ const Dashboard = () => {
         
         <div className="space-y-6">
           {/* AI Insights */}
-          <AiInsightsPreview insights={aiSuggestions.slice(0, 3)} />
+          <AiInsightsPreview insights={convertedInsights.slice(0, 3)} />
           
           {/* Quick Entry */}
           <QuickEntry onAddTransaction={handleAddTransaction} />
